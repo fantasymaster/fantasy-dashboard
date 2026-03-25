@@ -1,65 +1,114 @@
-import Image from "next/image";
+import Link from "next/link";
+import {
+  Camera,
+  BarChart2,
+  CalendarDays,
+  Users,
+  Newspaper,
+  ArrowRight,
+} from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
-export default function Home() {
+const sections = [
+  {
+    title: "Instagram Manager",
+    description: "Schedule posts, manage stories, and track engagement across your Instagram accounts.",
+    href: "/instagram",
+    icon: Camera,
+    badge: "Social",
+    badgeVariant: "secondary" as const,
+    stats: "Connect account to get started",
+  },
+  {
+    title: "Analytics",
+    description: "Deep-dive into performance metrics, audience insights, and growth trends.",
+    href: "/analytics",
+    icon: BarChart2,
+    badge: "Insights",
+    badgeVariant: "secondary" as const,
+    stats: "No data yet",
+  },
+  {
+    title: "Content Calendar",
+    description: "Plan, schedule, and organize your content pipeline across all channels.",
+    href: "/calendar",
+    icon: CalendarDays,
+    badge: "Planning",
+    badgeVariant: "secondary" as const,
+    stats: "0 scheduled items",
+  },
+  {
+    title: "Competitor Tracker",
+    description: "Monitor competitor activity, benchmark performance, and identify opportunities.",
+    href: "/competitors",
+    icon: Users,
+    badge: "Research",
+    badgeVariant: "secondary" as const,
+    stats: "0 competitors tracked",
+  },
+  {
+    title: "News Consolidator",
+    description: "Aggregate industry news, trending topics, and content inspiration in one place.",
+    href: "/news",
+    icon: Newspaper,
+    badge: "Feeds",
+    badgeVariant: "secondary" as const,
+    stats: "0 sources connected",
+  },
+];
+
+export default function DashboardPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          Welcome to Content Hub
+        </h1>
+        <p className="mt-2 text-muted-foreground">
+          Manage your content strategy, track analytics, and stay ahead of the competition.
+        </p>
+      </div>
+
+      {/* Status bar */}
+      <div className="mb-8 flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3">
+        <div className="h-2 w-2 rounded-full bg-amber-400" />
+        <p className="text-sm text-muted-foreground">
+          Getting started — connect your accounts to unlock full functionality.
+        </p>
+      </div>
+
+      {/* Section cards grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {sections.map((section) => {
+          const Icon = section.icon;
+          return (
+            <Link key={section.href} href={section.href} className="group block">
+              <Card className="h-full bg-card transition-colors hover:bg-accent/20 hover:border-border/80">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                      <Icon className="h-5 w-5 text-foreground" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={section.badgeVariant}>{section.badge}</Badge>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                    </div>
+                  </div>
+                  <CardTitle className="mt-3 text-base">{section.title}</CardTitle>
+                  <CardDescription className="text-sm leading-relaxed">
+                    {section.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-muted-foreground">{section.stats}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }
