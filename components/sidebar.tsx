@@ -113,7 +113,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         </div>
         <div className="flex flex-col">
           <span className="text-[13px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
-            Fantasy
+            Content Hub
           </span>
           <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
             Dashboard

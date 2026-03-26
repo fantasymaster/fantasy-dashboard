@@ -28,7 +28,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fantasy Dashboard",
+  title: "Content Hub Dashboard",
   description: "Manage your content, analytics, and social media presence",
 };
 

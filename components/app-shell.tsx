@@ -49,7 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <Zap className="h-3 w-3 text-white" strokeWidth={2.5} />
           </div>
-          <span className="text-[13px] font-semibold text-foreground">Fantasy</span>
+          <span className="text-[13px] font-semibold text-foreground">Content Hub</span>
         </div>
       </header>
 

@@ -1,7 +1,7 @@
-# Fantasy Dashboard — Complete Project Playbook
+# Content Hub Dashboard — Complete Project Playbook
 
 **Live URL:** https://fantasydashboard01.netlify.app
-**GitHub:** https://github.com/fantasymaster/fantasy-dashboard
+**GitHub:** https://github.com/fantasymaster/content-hub-dashboard
 **Last Updated:** March 2026
 
 ---
@@ -33,7 +33,7 @@
 
 ## 1. Project Overview
 
-Fantasy Dashboard is a personal Instagram content management dashboard built for a single authenticated user. It replaces the need to juggle multiple third-party tools (Buffer, Later, Hootsuite) by consolidating everything into one self-hosted application: drafting posts, scheduling content, viewing analytics, monitoring competitors, and reading industry news — all in one place.
+Content Hub Dashboard is a personal Instagram content management dashboard built for a single authenticated user. It replaces the need to juggle multiple third-party tools (Buffer, Later, Hootsuite) by consolidating everything into one self-hosted application: drafting posts, scheduling content, viewing analytics, monitoring competitors, and reading industry news — all in one place.
 
 ### What It Does
 
@@ -169,7 +169,7 @@ When prompted, choose:
 
 **If cloning the existing repo:**
 ```bash
-git clone https://github.com/fantasymaster/fantasy-dashboard.git content-dashboard
+git clone https://github.com/fantasymaster/content-hub-dashboard.git content-dashboard
 cd content-dashboard
 ```
 
@@ -289,7 +289,7 @@ Supabase provides three things for this project: the PostgreSQL database, file s
 2. Click **New Project**
 3. Choose your organization (or create one)
 4. Fill in:
-   - **Name:** `fantasy-dashboard` (or anything you like)
+   - **Name:** `content-hub-dashboard` (or anything you like)
    - **Database Password:** Generate a strong password and save it somewhere safe
    - **Region:** Choose the region closest to you
 5. Click **Create new project** and wait ~2 minutes for provisioning
@@ -401,7 +401,7 @@ Google OAuth handles user authentication. When a user clicks "Sign in with Googl
 
 1. Go to https://console.cloud.google.com
 2. At the top, click the project dropdown → **New Project**
-3. Name it `Fantasy Dashboard` → **Create**
+3. Name it `Content Hub Dashboard` → **Create**
 4. Make sure the new project is selected in the dropdown
 
 ### 6.2 Configure the OAuth Consent Screen
@@ -411,7 +411,7 @@ Before creating credentials, you must configure the consent screen (what users s
 1. Go to **APIs & Services** → **OAuth consent screen**
 2. Choose **External** (even though only one user will ever sign in) → **Create**
 3. Fill in:
-   - **App name:** Fantasy Dashboard
+   - **App name:** Content Hub Dashboard
    - **User support email:** your email
    - **Developer contact information:** your email
 4. Click **Save and Continue**
@@ -426,7 +426,7 @@ Before creating credentials, you must configure the consent screen (what users s
 1. Go to **APIs & Services** → **Credentials**
 2. Click **Create Credentials** → **OAuth 2.0 Client IDs**
 3. Application type: **Web application**
-4. Name: `Fantasy Dashboard Web Client`
+4. Name: `Content Hub Dashboard Web Client`
 5. Under **Authorized redirect URIs**, click **Add URI** and add both:
    ```
    http://localhost:3000/api/auth/callback/google
@@ -467,7 +467,7 @@ If you don't have a Facebook Page, create one at https://facebook.com/pages/crea
 3. Click **My Apps** → **Create App**
 4. Select **Business** as the app type → **Next**
 5. Fill in:
-   - **App name:** Fantasy Dashboard
+   - **App name:** Content Hub Dashboard
    - **App contact email:** your email
 6. Click **Create App**
 
