@@ -40,19 +40,17 @@ function ThemeToggle() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          className={cn(
-            "flex h-7 w-7 items-center justify-center rounded-md",
-            "text-muted-foreground",
-            "transition-all duration-200",
-            "hover:bg-accent hover:text-foreground",
-            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-          )}
-          aria-label="Toggle theme"
-        >
-          <Icon className="h-3.5 w-3.5" />
-        </button>
+      <DropdownMenuTrigger
+        className={cn(
+          "flex h-7 w-7 items-center justify-center rounded-md",
+          "text-muted-foreground",
+          "transition-all duration-200",
+          "hover:bg-accent hover:text-foreground",
+          "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+        )}
+        aria-label="Toggle theme"
+      >
+        <Icon className="h-3.5 w-3.5" />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
