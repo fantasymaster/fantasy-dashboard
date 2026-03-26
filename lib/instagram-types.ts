@@ -10,6 +10,7 @@ export interface InstagramPost {
   scheduledDate?: string; // ISO string, used when status === "scheduled"
   publishedDate?: string; // ISO string, used when status === "published"
   createdAt: string;
+  imageUrl?: string;      // Supabase Storage public URL
 }
 
 export const POST_TYPE_LABELS: Record<PostType, string> = {

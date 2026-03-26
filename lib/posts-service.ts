@@ -11,6 +11,7 @@ interface PostRow {
   status: string;
   scheduled_date: string | null;
   published_date: string | null;
+  image_url: string | null;
 }
 
 // ─── Map DB row → app type ───────────────────────────────────────────────────
@@ -24,6 +25,7 @@ function rowToPost(row: PostRow): InstagramPost {
     scheduledDate: row.scheduled_date ?? undefined,
     publishedDate: row.published_date ?? undefined,
     createdAt: row.created_at,
+    imageUrl: row.image_url ?? undefined,
   };
 }
 
@@ -51,6 +53,7 @@ export async function createPost(
       status: post.status,
       scheduled_date: post.scheduledDate ?? null,
       published_date: post.publishedDate ?? null,
+      image_url: post.imageUrl ?? null,
     })
     .select()
     .single();
@@ -71,12 +74,9 @@ export async function updatePost(
       ...(updates.hashtags !== undefined && { hashtags: updates.hashtags }),
       ...(updates.postType !== undefined && { post_type: updates.postType }),
       ...(updates.status !== undefined && { status: updates.status }),
-      ...(updates.scheduledDate !== undefined && {
-        scheduled_date: updates.scheduledDate ?? null,
-      }),
-      ...(updates.publishedDate !== undefined && {
-        published_date: updates.publishedDate ?? null,
-      }),
+      ...(updates.scheduledDate !== undefined && { scheduled_date: updates.scheduledDate ?? null }),
+      ...(updates.publishedDate !== undefined && { published_date: updates.publishedDate ?? null }),
+      ...(updates.imageUrl !== undefined && { image_url: updates.imageUrl ?? null }),
     })
     .eq("id", id)
     .select()
@@ -99,7 +99,6 @@ export async function movePost(
 ): Promise<InstagramPost> {
   return updatePost(id, {
     status,
-    scheduledDate: status !== "scheduled" ? undefined : undefined,
     publishedDate:
       status === "published" ? new Date().toISOString() : undefined,
   });
