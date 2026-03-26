@@ -1,20 +1,30 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
-const jakartaSans = Plus_Jakarta_Sans({
+/*
+ * Geist Sans — designed by Vercel specifically for developer tools and
+ * dashboards. Excellent legibility at 12-16px, clean geometric forms,
+ * and available in the full weight range we need.
+ *
+ * Geist Mono — paired monospace for numbers, code, and stats. Shares
+ * the same proportions as Geist Sans so mixed-type lines align cleanly.
+ */
+const geistSans = Geist({
   variable: "--font-sans",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const geistMono = Geist_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "600"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -30,7 +40,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${jakartaSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="h-full bg-background text-foreground">
@@ -40,7 +50,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
-          <TooltipProvider>
+          <TooltipProvider delayDuration={300}>
             <div className="flex h-full">
               <Sidebar />
               <main className="flex-1 overflow-y-auto">
