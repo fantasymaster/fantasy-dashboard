@@ -50,7 +50,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
-          <TooltipProvider delayDuration={300}>
+          <TooltipProvider>
             <div className="flex h-full">
               <Sidebar />
               <main className="flex-1 overflow-y-auto">
