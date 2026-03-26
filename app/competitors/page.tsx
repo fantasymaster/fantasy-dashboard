@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   Users, Plus, TrendingUp, TrendingDown, Trash2,
-  Instagram, ExternalLink, BarChart2, Search,
+  AtSign, ExternalLink, BarChart2, Search,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -87,7 +87,7 @@ function CompetitorCard({
       <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 to-pink-500">
-            <Instagram className="h-5 w-5 text-white" />
+            <AtSign className="h-5 w-5 text-white" />
           </div>
           <div>
             <p className="font-semibold text-sm">{competitor.name}</p>
