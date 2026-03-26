@@ -203,8 +203,8 @@ function ActionCard({
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-full px-8 py-8">
-      <div className="mx-auto max-w-[960px] space-y-8">
+    <div className="min-h-full px-4 py-6 sm:px-8 sm:py-8">
+      <div className="mx-auto max-w-[960px] space-y-6 sm:space-y-8">
 
         {/* ── Hero ── */}
         <div>
@@ -219,8 +219,8 @@ export default function DashboardPage() {
           {/* Heading */}
           <h1
             className={cn(
-              "text-[2rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground",
-              "sm:text-[2.5rem]",
+              "text-[1.75rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground",
+              "sm:text-[2rem] lg:text-[2.5rem]",
             )}
           >
             Welcome back.

@@ -207,7 +207,7 @@ export default function CompetitorsPage() {
   const totalFollowers = competitors.reduce((acc, c) => acc + c.followers, 0);
 
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -215,7 +215,7 @@ export default function CompetitorsPage() {
             <Users className="h-5 w-5 text-violet-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Competitor Tracker</h1>
+            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Competitor Tracker</h1>
             <p className="text-sm text-muted-foreground">
               Monitor and benchmark against competitors in your niche
             </p>
@@ -231,7 +231,7 @@ export default function CompetitorsPage() {
       </div>
 
       {/* Summary stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {[
           { label: "Competitors Tracked", value: competitors.length.toString(), color: "text-violet-400" },
           { label: "Avg Engagement Rate", value: `${avgEngagement}%`, color: "text-blue-400" },
@@ -300,7 +300,7 @@ export default function CompetitorsPage() {
                 <Input placeholder="@handle" value={form.handle} onChange={e => setForm(f => ({ ...f, handle: e.target.value }))} />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="flex flex-col gap-1.5">
                 <Label>Followers</Label>
                 <Input type="number" placeholder="48200" value={form.followers} onChange={e => setForm(f => ({ ...f, followers: e.target.value }))} />

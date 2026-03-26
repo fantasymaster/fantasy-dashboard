@@ -486,15 +486,15 @@ export default function InstagramPage() {
   } : null;
 
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6 lg:p-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 to-pink-500">
             <Camera className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Instagram Manager</h1>
-            <p className="text-sm text-muted-foreground">Manage your content pipeline — from idea to published post.</p>
+            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Instagram Manager</h1>
+            <p className="text-sm text-muted-foreground hidden sm:block">Manage your content pipeline — from idea to published post.</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -516,7 +516,8 @@ export default function InstagramPage() {
       </div>
 
       <Tabs defaultValue="scheduled" className="flex flex-col gap-4">
-        <TabsList className="w-fit">
+        <div className="overflow-x-auto">
+        <TabsList className="w-fit min-w-max">
           {(["scheduled", "draft", "published", "backlog"] as PostStatus[]).map((s) => (
             <TabsTrigger key={s} value={s} className="gap-2">
               {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -534,6 +535,7 @@ export default function InstagramPage() {
             </TabsTrigger>
           ))}
         </TabsList>
+        </div>
 
         {(["scheduled", "draft", "published", "backlog"] as PostStatus[]).map((s) => (
           <TabsContent key={s} value={s} className="mt-0">

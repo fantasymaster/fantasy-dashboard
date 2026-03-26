@@ -6,7 +6,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Camera, BarChart2, CalendarDays,
-  Users, Newspaper, Sun, Moon, Monitor, Zap,
+  Users, Newspaper, Sun, Moon, Monitor, Zap, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -85,7 +85,7 @@ function ThemeToggle() {
 }
 
 /* ─── Sidebar ────────────────────────────────────────────────────── */
-export function Sidebar() {
+export function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
 
   return (
@@ -118,6 +118,22 @@ export function Sidebar() {
             Dashboard
           </span>
         </div>
+
+        {/* Mobile close button */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className={cn(
+              "ml-auto flex h-7 w-7 items-center justify-center rounded-md",
+              "text-muted-foreground transition-colors",
+              "hover:bg-accent hover:text-foreground",
+              "md:hidden",
+            )}
+            aria-label="Close menu"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Hairline separator */}

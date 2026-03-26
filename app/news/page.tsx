@@ -340,7 +340,7 @@ export default function NewsPage() {
   }, [activeCategory, search, bookmarks, showBookmarked, refreshKey]);
 
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -348,7 +348,7 @@ export default function NewsPage() {
             <Newspaper className="h-5 w-5 text-orange-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">News Consolidator</h1>
+            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">News Consolidator</h1>
             <p className="text-sm text-muted-foreground">
               Stay on top of trends — turn articles into post ideas instantly
             </p>

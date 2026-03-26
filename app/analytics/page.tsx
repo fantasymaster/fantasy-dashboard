@@ -62,7 +62,7 @@ function StatCard({
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-            <p className="mt-2 text-3xl font-bold tracking-tight">{value}</p>
+            <p className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{value}</p>
             <div className={`mt-1 flex items-center gap-1 text-xs font-medium ${changeType === "up" ? "text-emerald-400" : "text-rose-400"}`}>
               {changeType === "up"
                 ? <ArrowUpRight className="h-3.5 w-3.5" />
@@ -102,14 +102,14 @@ function CustomTooltip({ active, payload, label }: {active?: boolean; payload?: 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15">
           <BarChart2 className="h-5 w-5 text-blue-400" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Analytics</h1>
           <p className="text-sm text-muted-foreground">
             Track performance across your content — sample data shown
           </p>
@@ -117,7 +117,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Total Followers" value="11.4K" change="+28% this month" changeType="up" icon={Users} color="bg-purple-500/15 text-purple-400" />
         <StatCard label="Avg. Reach" value="18.2K" change="+14% this month" changeType="up" icon={Eye} color="bg-blue-500/15 text-blue-400" />
         <StatCard label="Engagement Rate" value="4.8%" change="+0.6% this month" changeType="up" icon={MousePointerClick} color="bg-emerald-500/15 text-emerald-400" />
@@ -222,7 +222,7 @@ export default function AnalyticsPage() {
                     <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
                   <p className="flex-1 truncate text-sm">{post.caption}</p>
-                  <div className="hidden gap-6 sm:flex text-xs text-muted-foreground">
+                  <div className="hidden gap-3 sm:flex lg:gap-6 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><span className="text-purple-400 font-medium">{post.likes.toLocaleString()}</span> likes</span>
                     <span className="flex items-center gap-1"><span className="text-blue-400 font-medium">{post.comments}</span> comments</span>
                     <span className="flex items-center gap-1"><span className="text-emerald-400 font-medium">{post.reach.toLocaleString()}</span> reach</span>

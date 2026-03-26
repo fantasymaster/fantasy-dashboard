@@ -94,23 +94,23 @@ export default function CalendarPage() {
     currentYear === today.getFullYear();
 
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15">
           <CalendarDays className="h-5 w-5 text-emerald-400" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Content Calendar</h1>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Content Calendar</h1>
           <p className="text-sm text-muted-foreground">
             View your scheduled and published posts by date
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         {/* Calendar */}
-        <Card className="lg:col-span-2">
+        <Card className="xl:col-span-2">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -149,7 +149,7 @@ export default function CalendarPage() {
                     key={idx}
                     onClick={() => day && setSelectedDay(selected ? null : day)}
                     className={cn(
-                      "min-h-[72px] rounded-lg border p-1.5 transition-all",
+                      "min-h-[48px] rounded-lg border p-1 transition-all sm:min-h-[72px] sm:p-1.5",
                       day ? "cursor-pointer" : "border-transparent",
                       day && !selected && !todayCell && "border-border bg-card hover:bg-accent/50",
                       todayCell && !selected && "border-primary/40 bg-primary/5",
@@ -166,21 +166,29 @@ export default function CalendarPage() {
                         </span>
                         {dayPosts.length > 0 && (
                           <div className="mt-1 flex flex-col gap-0.5">
-                            {dayPosts.slice(0, 2).map((post) => (
-                              <div
-                                key={post.id}
-                                className={cn(
-                                  "flex items-center gap-0.5 rounded px-1 py-0.5 text-[9px] font-medium truncate",
-                                  `bg-gradient-to-r ${POST_TYPE_ACCENT[post.postType]} bg-opacity-20 text-white/80`
-                                )}
-                              >
-                                <div className={cn("h-1.5 w-1.5 shrink-0 rounded-full", POST_TYPE_DOT[post.postType])} />
-                                <span className="truncate">{post.caption.slice(0, 12)}…</span>
-                              </div>
-                            ))}
-                            {dayPosts.length > 2 && (
-                              <span className="pl-1 text-[9px] text-muted-foreground">+{dayPosts.length - 2} more</span>
-                            )}
+                            {/* Dot indicators on mobile, full label on sm+ */}
+                            <div className="flex flex-wrap gap-0.5 sm:hidden">
+                              {dayPosts.slice(0, 3).map((post) => (
+                                <div key={post.id} className={cn("h-1.5 w-1.5 rounded-full", POST_TYPE_DOT[post.postType])} />
+                              ))}
+                            </div>
+                            <div className="hidden sm:flex flex-col gap-0.5">
+                              {dayPosts.slice(0, 2).map((post) => (
+                                <div
+                                  key={post.id}
+                                  className={cn(
+                                    "flex items-center gap-0.5 rounded px-1 py-0.5 text-[9px] font-medium truncate",
+                                    `bg-gradient-to-r ${POST_TYPE_ACCENT[post.postType]} bg-opacity-20 text-white/80`
+                                  )}
+                                >
+                                  <div className={cn("h-1.5 w-1.5 shrink-0 rounded-full", POST_TYPE_DOT[post.postType])} />
+                                  <span className="truncate">{post.caption.slice(0, 12)}…</span>
+                                </div>
+                              ))}
+                              {dayPosts.length > 2 && (
+                                <span className="pl-1 text-[9px] text-muted-foreground">+{dayPosts.length - 2} more</span>
+                              )}
+                            </div>
                           </div>
                         )}
                       </>
