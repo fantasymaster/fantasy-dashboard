@@ -16,7 +16,6 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 
 const navItems = [
   { label: "Dashboard",          href: "/",           icon: LayoutDashboard },
@@ -42,14 +41,8 @@ function ThemeToggle() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-        >
-          {icon}
-        </Button>
+      <DropdownMenuTrigger className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+        {icon}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="top" className="w-36">
         <DropdownMenuItem
