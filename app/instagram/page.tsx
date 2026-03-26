@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Camera,
   Plus,
@@ -16,6 +16,8 @@ import {
   BookOpen,
   Hash,
   CheckCircle2,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,8 +60,14 @@ import {
   POST_TYPE_COLORS,
   POST_TYPE_ACCENT,
   STATUS_COLORS,
-  INITIAL_POSTS,
 } from "@/lib/instagram-types";
+import {
+  fetchPosts,
+  createPost,
+  updatePost,
+  deletePost,
+  movePost,
+} from "@/lib/posts-service";
 
 // ─── Icons per post type ────────────────────────────────────────────────────
 const PostTypeIcon: Record<PostType, React.ElementType> = {
@@ -82,24 +90,22 @@ function formatDate(iso?: string) {
   });
 }
 
-function uid() {
-  return Math.random().toString(36).slice(2, 10);
-}
-
 // ─── Stat card ──────────────────────────────────────────────────────────────
 function StatCard({
   label,
   count,
   color,
+  loading,
 }: {
   label: string;
   count: number;
   color: string;
+  loading: boolean;
 }) {
   return (
     <div className="flex flex-col gap-1 rounded-xl border border-border bg-card px-5 py-4">
       <span className={cn("text-2xl font-bold tabular-nums", color)}>
-        {count}
+        {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : count}
       </span>
       <span className="text-xs text-muted-foreground">{label}</span>
     </div>
@@ -137,7 +143,6 @@ function PostCard({
 
       <CardHeader className="flex flex-row items-start justify-between gap-3 px-4 pt-4 pb-2">
         <div className="flex items-center gap-2 min-w-0">
-          {/* Post type icon */}
           <div
             className={cn(
               "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
@@ -170,9 +175,7 @@ function PostCard({
 
         {/* Actions menu */}
         <DropdownMenu>
-          <DropdownMenuTrigger
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md opacity-0 transition-opacity group-hover:opacity-100 text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
+          <DropdownMenuTrigger className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md opacity-0 transition-opacity group-hover:opacity-100 text-muted-foreground hover:bg-accent hover:text-foreground">
             <MoreHorizontal className="h-4 w-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
@@ -209,19 +212,16 @@ function PostCard({
       </CardHeader>
 
       <CardContent className="flex flex-1 flex-col gap-3 px-4 pb-4">
-        {/* Caption */}
         <p className="line-clamp-3 text-sm leading-relaxed text-foreground/90">
           {post.caption}
         </p>
 
-        {/* Hashtags */}
         {post.hashtags && (
           <p className="line-clamp-1 text-xs text-purple-400/70">
             {post.hashtags}
           </p>
         )}
 
-        {/* Date row */}
         <div className="mt-auto flex flex-col gap-1 pt-1">
           {post.scheduledDate && post.status === "scheduled" && (
             <div className="flex items-center gap-1.5 text-xs text-emerald-400/80">
@@ -246,13 +246,7 @@ function PostCard({
 }
 
 // ─── Empty state ─────────────────────────────────────────────────────────────
-function EmptyState({
-  label,
-  onAdd,
-}: {
-  label: string;
-  onAdd: () => void;
-}) {
+function EmptyState({ label, onAdd }: { label: string; onAdd: () => void }) {
   return (
     <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center">
       <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
@@ -267,6 +261,30 @@ function EmptyState({
       <Button variant="outline" size="sm" onClick={onAdd}>
         <Plus className="mr-1.5 h-3.5 w-3.5" />
         Add post
+      </Button>
+    </div>
+  );
+}
+
+// ─── Loading skeleton ────────────────────────────────────────────────────────
+function LoadingSkeleton() {
+  return (
+    <div className="col-span-full flex flex-col items-center justify-center py-20 gap-3">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <p className="text-sm text-muted-foreground">Loading posts...</p>
+    </div>
+  );
+}
+
+// ─── Error state ─────────────────────────────────────────────────────────────
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-destructive/40 py-16 text-center gap-3">
+      <p className="text-sm font-medium text-destructive">Failed to load posts</p>
+      <p className="text-xs text-muted-foreground max-w-xs">{message}</p>
+      <Button variant="outline" size="sm" onClick={onRetry}>
+        <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+        Retry
       </Button>
     </div>
   );
@@ -294,21 +312,17 @@ function PostDialog({
   initialData,
   onClose,
   onSave,
+  saving,
 }: {
   open: boolean;
   initialData: PostFormData | null;
   onClose: () => void;
   onSave: (data: PostFormData) => void;
+  saving: boolean;
 }) {
   const [form, setForm] = useState<PostFormData>(initialData ?? defaultForm);
   const isEditing = initialData !== null;
 
-  // Sync when dialog re-opens with new initialData
-  const handleOpenChange = (o: boolean) => {
-    if (!o) onClose();
-  };
-
-  // Sync form whenever the dialog opens with new data
   useEffect(() => {
     setForm(initialData ?? defaultForm);
   }, [initialData]);
@@ -320,11 +334,10 @@ function PostDialog({
   function handleSave() {
     if (!form.caption.trim()) return;
     onSave(form);
-    setForm(defaultForm);
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -341,7 +354,6 @@ function PostDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-1">
-          {/* Caption */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="caption">
               Caption <span className="text-destructive">*</span>
@@ -355,7 +367,6 @@ function PostDialog({
             />
           </div>
 
-          {/* Hashtags */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="hashtags" className="flex items-center gap-1.5">
               <Hash className="h-3.5 w-3.5 text-muted-foreground" />
@@ -370,7 +381,6 @@ function PostDialog({
             />
           </div>
 
-          {/* Post type + Status row */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label>Post Type</Label>
@@ -409,7 +419,6 @@ function PostDialog({
             </div>
           </div>
 
-          {/* Scheduled date — only shown when status is "scheduled" */}
           {form.status === "scheduled" && (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="scheduledDate" className="flex items-center gap-1.5">
@@ -426,7 +435,6 @@ function PostDialog({
             </div>
           )}
 
-          {/* Published date — only shown when status is "published" */}
           {form.status === "published" && (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="publishedDate" className="flex items-center gap-1.5">
@@ -445,15 +453,24 @@ function PostDialog({
         </div>
 
         <DialogFooter className="gap-2 pt-2">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} disabled={saving}>
             Cancel
           </Button>
           <Button
             onClick={handleSave}
-            disabled={!form.caption.trim()}
+            disabled={!form.caption.trim() || saving}
             className="bg-gradient-to-r from-purple-600 to-pink-500 text-white hover:opacity-90"
           >
-            {isEditing ? "Save Changes" : "Add Post"}
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                Saving...
+              </>
+            ) : isEditing ? (
+              "Save Changes"
+            ) : (
+              "Add Post"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -469,6 +486,9 @@ function PostGrid({
   onMove,
   onEdit,
   onAdd,
+  loading,
+  error,
+  onRetry,
 }: {
   posts: InstagramPost[];
   emptyLabel: string;
@@ -476,10 +496,17 @@ function PostGrid({
   onMove: (id: string, status: PostStatus) => void;
   onEdit: (post: InstagramPost) => void;
   onAdd: () => void;
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
 }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {posts.length === 0 ? (
+      {loading ? (
+        <LoadingSkeleton />
+      ) : error ? (
+        <ErrorState message={error} onRetry={onRetry} />
+      ) : posts.length === 0 ? (
         <EmptyState label={emptyLabel} onAdd={onAdd} />
       ) : (
         posts.map((post) => (
@@ -498,12 +525,33 @@ function PostGrid({
 
 // ─── Main page ───────────────────────────────────────────────────────────────
 export default function InstagramPage() {
-  const [posts, setPosts] = useState<InstagramPost[]>(INITIAL_POSTS);
+  const [posts, setPosts] = useState<InstagramPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<InstagramPost | null>(null);
   const [defaultStatus, setDefaultStatus] = useState<PostStatus>("draft");
 
-  // Derived lists per status
+  // ── Load posts from Supabase on mount ──
+  const loadPosts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchPosts();
+      setPosts(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error occurred");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPosts();
+  }, [loadPosts]);
+
   const byStatus = (s: PostStatus) => posts.filter((p) => p.status === s);
 
   function openAddDialog(status: PostStatus = "draft") {
@@ -517,64 +565,73 @@ export default function InstagramPage() {
     setDialogOpen(true);
   }
 
-  function handleSave(data: PostFormData) {
-    if (editingPost) {
-      setPosts((prev) =>
-        prev.map((p) =>
-          p.id === editingPost.id
-            ? {
-                ...p,
-                caption: data.caption,
-                hashtags: data.hashtags,
-                postType: data.postType,
-                status: data.status,
-                scheduledDate:
-                  data.status === "scheduled" ? data.scheduledDate : undefined,
-                publishedDate:
-                  data.status === "published" ? data.scheduledDate : undefined,
-              }
-            : p
-        )
+  // ── Save (create or update) ──
+  async function handleSave(data: PostFormData) {
+    setSaving(true);
+    try {
+      if (editingPost) {
+        const updated = await updatePost(editingPost.id, {
+          caption: data.caption,
+          hashtags: data.hashtags,
+          postType: data.postType,
+          status: data.status,
+          scheduledDate:
+            data.status === "scheduled" ? data.scheduledDate : undefined,
+          publishedDate:
+            data.status === "published" ? data.scheduledDate : undefined,
+        });
+        setPosts((prev) =>
+          prev.map((p) => (p.id === editingPost.id ? updated : p))
+        );
+      } else {
+        const newPost = await createPost({
+          caption: data.caption,
+          hashtags: data.hashtags,
+          postType: data.postType,
+          status: data.status,
+          scheduledDate:
+            data.status === "scheduled" ? data.scheduledDate : undefined,
+          publishedDate:
+            data.status === "published" ? data.scheduledDate : undefined,
+        });
+        setPosts((prev) => [newPost, ...prev]);
+      }
+      setDialogOpen(false);
+      setEditingPost(null);
+    } catch (err) {
+      alert(
+        "Failed to save post: " +
+          (err instanceof Error ? err.message : "Unknown error")
       );
-    } else {
-      const newPost: InstagramPost = {
-        id: uid(),
-        caption: data.caption,
-        hashtags: data.hashtags,
-        postType: data.postType,
-        status: data.status,
-        scheduledDate:
-          data.status === "scheduled" ? data.scheduledDate : undefined,
-        publishedDate:
-          data.status === "published" ? data.scheduledDate : undefined,
-        createdAt: new Date().toISOString(),
-      };
-      setPosts((prev) => [newPost, ...prev]);
+    } finally {
+      setSaving(false);
     }
-    setDialogOpen(false);
-    setEditingPost(null);
   }
 
-  function handleDelete(id: string) {
-    setPosts((prev) => prev.filter((p) => p.id !== id));
+  // ── Delete ──
+  async function handleDelete(id: string) {
+    try {
+      await deletePost(id);
+      setPosts((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      alert(
+        "Failed to delete: " +
+          (err instanceof Error ? err.message : "Unknown error")
+      );
+    }
   }
 
-  function handleMove(id: string, status: PostStatus) {
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              status,
-              scheduledDate: status !== "scheduled" ? undefined : p.scheduledDate,
-              publishedDate:
-                status === "published"
-                  ? new Date().toISOString()
-                  : undefined,
-            }
-          : p
-      )
-    );
+  // ── Move ──
+  async function handleMove(id: string, status: PostStatus) {
+    try {
+      const updated = await movePost(id, status);
+      setPosts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    } catch (err) {
+      alert(
+        "Failed to move post: " +
+          (err instanceof Error ? err.message : "Unknown error")
+      );
+    }
   }
 
   const formInitialData: PostFormData | null = editingPost
@@ -583,7 +640,8 @@ export default function InstagramPage() {
         hashtags: editingPost.hashtags,
         postType: editingPost.postType,
         status: editingPost.status,
-        scheduledDate: editingPost.scheduledDate ?? editingPost.publishedDate ?? "",
+        scheduledDate:
+          editingPost.scheduledDate ?? editingPost.publishedDate ?? "",
       }
     : null;
 
@@ -604,13 +662,25 @@ export default function InstagramPage() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={() => openAddDialog("draft")}
-          className="bg-gradient-to-r from-purple-600 to-pink-500 text-white hover:opacity-90"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          New Post
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadPosts}
+            disabled={loading}
+          >
+            <RefreshCw
+              className={cn("h-3.5 w-3.5", loading && "animate-spin")}
+            />
+          </Button>
+          <Button
+            onClick={() => openAddDialog("draft")}
+            className="bg-gradient-to-r from-purple-600 to-pink-500 text-white hover:opacity-90"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            New Post
+          </Button>
+        </div>
       </div>
 
       {/* ── Stats row ── */}
@@ -619,21 +689,25 @@ export default function InstagramPage() {
           label="Scheduled"
           count={byStatus("scheduled").length}
           color="text-emerald-400"
+          loading={loading}
         />
         <StatCard
           label="Drafts"
           count={byStatus("draft").length}
           color="text-zinc-300"
+          loading={loading}
         />
         <StatCard
           label="Published"
           count={byStatus("published").length}
           color="text-sky-400"
+          loading={loading}
         />
         <StatCard
           label="Backlog"
           count={byStatus("backlog").length}
           color="text-orange-400"
+          loading={loading}
         />
       </div>
 
@@ -674,49 +748,23 @@ export default function InstagramPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="scheduled" className="mt-0">
-          <PostGrid
-            posts={byStatus("scheduled")}
-            emptyLabel="scheduled"
-            onDelete={handleDelete}
-            onMove={handleMove}
-            onEdit={openEditDialog}
-            onAdd={() => openAddDialog("scheduled")}
-          />
-        </TabsContent>
-
-        <TabsContent value="draft" className="mt-0">
-          <PostGrid
-            posts={byStatus("draft")}
-            emptyLabel="draft"
-            onDelete={handleDelete}
-            onMove={handleMove}
-            onEdit={openEditDialog}
-            onAdd={() => openAddDialog("draft")}
-          />
-        </TabsContent>
-
-        <TabsContent value="published" className="mt-0">
-          <PostGrid
-            posts={byStatus("published")}
-            emptyLabel="published"
-            onDelete={handleDelete}
-            onMove={handleMove}
-            onEdit={openEditDialog}
-            onAdd={() => openAddDialog("published")}
-          />
-        </TabsContent>
-
-        <TabsContent value="backlog" className="mt-0">
-          <PostGrid
-            posts={byStatus("backlog")}
-            emptyLabel="backlog"
-            onDelete={handleDelete}
-            onMove={handleMove}
-            onEdit={openEditDialog}
-            onAdd={() => openAddDialog("backlog")}
-          />
-        </TabsContent>
+        {(["scheduled", "draft", "published", "backlog"] as PostStatus[]).map(
+          (status) => (
+            <TabsContent key={status} value={status} className="mt-0">
+              <PostGrid
+                posts={byStatus(status)}
+                emptyLabel={status}
+                onDelete={handleDelete}
+                onMove={handleMove}
+                onEdit={openEditDialog}
+                onAdd={() => openAddDialog(status)}
+                loading={loading}
+                error={error}
+                onRetry={loadPosts}
+              />
+            </TabsContent>
+          )
+        )}
       </Tabs>
 
       {/* ── Add / Edit dialog ── */}
@@ -732,6 +780,7 @@ export default function InstagramPage() {
           setEditingPost(null);
         }}
         onSave={handleSave}
+        saving={saving}
       />
     </div>
   );
