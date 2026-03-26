@@ -12,6 +12,9 @@ import {
   Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getConnection } from "@/lib/supabase-server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 /* ─── Data ───────────────────────────────────────────────────────── */
 
@@ -201,7 +204,24 @@ function ActionCard({
 
 /* ─── Page ───────────────────────────────────────────────────────── */
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  // Pull live Instagram data if connected
+  const session = await getServerSession(authOptions);
+  const conn = session?.user?.email
+    ? await getConnection(session.user.email).catch(() => null)
+    : null;
+
+  const liveKpis = kpiCards.map((card) => {
+    if (card.label === "Total Followers" && conn) {
+      return {
+        ...card,
+        value: conn.followers_count.toLocaleString(),
+        note: `@${conn.username}`,
+      };
+    }
+    return card;
+  });
+
   return (
     <div className="min-h-full px-4 py-6 sm:px-8 sm:py-8">
       <div className="mx-auto max-w-[960px] space-y-6 sm:space-y-8">
@@ -239,7 +259,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {kpiCards.map((card) => (
+            {liveKpis.map((card) => (
               <KpiCard key={card.label} {...card} />
             ))}
           </div>

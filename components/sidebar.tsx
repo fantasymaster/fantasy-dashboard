@@ -6,7 +6,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Camera, BarChart2, CalendarDays,
-  Users, Newspaper, Sun, Moon, Monitor, Zap, X,
+  Users, Newspaper, Sun, Moon, Monitor, Zap, X, Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -23,6 +23,7 @@ const navItems = [
   { label: "Content Calendar",   href: "/calendar",    icon: CalendarDays    },
   { label: "Competitor Tracker", href: "/competitors", icon: Users           },
   { label: "News Consolidator",  href: "/news",        icon: Newspaper       },
+  { label: "Settings",           href: "/settings",    icon: Settings        },
 ];
 
 /* ─── Theme Toggle ───────────────────────────────────────────────── */

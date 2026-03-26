@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Camera, Plus, Calendar, Clock, MoreHorizontal, Pencil, Trash2,
   MoveRight, ImageIcon, Film, Layers, BookOpen, Hash, CheckCircle2,
-  Loader2, RefreshCw, Upload, X, Image,
+  Loader2, RefreshCw, Upload, X, Image, Heart, MessageCircle,
+  ExternalLink, Zap, Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ import {
 } from "@/lib/instagram-types";
 import { fetchPosts, createPost, updatePost, deletePost, movePost } from "@/lib/posts-service";
 import { uploadImage } from "@/lib/upload-service";
+import type { IGMedia } from "@/lib/instagram-api";
 
 // ─── Icons per post type ─────────────────────────────────────────────────────
 const PostTypeIcon: Record<PostType, React.ElementType> = {
@@ -417,6 +419,121 @@ function PostGrid({ posts, emptyLabel, onDelete, onMove, onEdit, onAdd, loading,
   );
 }
 
+// ─── Live Feed (real Instagram posts) ─────────────────────────────────────────
+function LiveFeed() {
+  const [media, setMedia]         = useState<IGMedia[]>([]);
+  const [connected, setConnected] = useState<boolean | null>(null);
+  const [loading, setLoading]     = useState(true);
+
+  useEffect(() => {
+    fetch("/api/instagram/media?limit=24")
+      .then((r) => r.json())
+      .then((d) => {
+        setConnected(d.connected ?? false);
+        setMedia(d.media ?? []);
+      })
+      .catch(() => setConnected(false))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center py-20 gap-3">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <p className="text-sm text-muted-foreground">Fetching your Instagram posts…</p>
+    </div>
+  );
+
+  if (!connected) return (
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center gap-4">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500">
+        <Zap className="h-7 w-7 text-white" />
+      </div>
+      <div>
+        <p className="text-sm font-semibold">Instagram not connected</p>
+        <p className="mt-1 text-xs text-muted-foreground max-w-xs mx-auto">
+          Connect your Instagram Business or Creator account in Settings to see your live posts here.
+        </p>
+      </div>
+      <a
+        href="/settings"
+        className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
+      >
+        <Settings className="h-4 w-4" />
+        Go to Settings
+      </a>
+    </div>
+  );
+
+  if (media.length === 0) return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <p className="text-sm text-muted-foreground">No posts found on your account.</p>
+    </div>
+  );
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {media.map((post) => (
+        <div
+          key={post.id}
+          className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all hover:shadow-lg hover:shadow-black/20"
+        >
+          {/* Media thumbnail */}
+          {(post.media_url || post.thumbnail_url) && (
+            <div className="relative h-48 w-full overflow-hidden bg-muted">
+              <img
+                src={post.thumbnail_url ?? post.media_url ?? ""}
+                alt={post.caption ?? ""}
+                className="h-full w-full object-cover transition-transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white">
+                {post.media_type === "CAROUSEL_ALBUM" ? "Carousel" : post.media_type === "VIDEO" ? "Reel/Video" : "Photo"}
+              </span>
+            </div>
+          )}
+
+          {/* Content */}
+          <div className="flex flex-1 flex-col gap-3 p-4">
+            {post.caption && (
+              <p className="line-clamp-3 text-xs leading-relaxed text-foreground/80">
+                {post.caption}
+              </p>
+            )}
+
+            {/* Metrics */}
+            <div className="mt-auto flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
+              {post.like_count != null && (
+                <span className="flex items-center gap-1">
+                  <Heart className="h-3 w-3 text-rose-400" />
+                  <span className="font-medium text-foreground">{post.like_count.toLocaleString()}</span>
+                </span>
+              )}
+              {post.comments_count != null && (
+                <span className="flex items-center gap-1">
+                  <MessageCircle className="h-3 w-3 text-blue-400" />
+                  <span className="font-medium text-foreground">{post.comments_count.toLocaleString()}</span>
+                </span>
+              )}
+              <span className="ml-auto text-[10px]">
+                {new Date(post.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </span>
+              <a
+                href={post.permalink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                title="View on Instagram"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function InstagramPage() {
   const [posts, setPosts] = useState<InstagramPost[]>([]);
@@ -517,24 +634,29 @@ export default function InstagramPage() {
 
       <Tabs defaultValue="scheduled" className="flex flex-col gap-4">
         <div className="overflow-x-auto">
-        <TabsList className="w-fit min-w-max">
-          {(["scheduled", "draft", "published", "backlog"] as PostStatus[]).map((s) => (
-            <TabsTrigger key={s} value={s} className="gap-2">
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-              {byStatus(s).length > 0 && (
-                <span className={cn(
-                  "flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium",
-                  s === "scheduled" ? "bg-emerald-500/20 text-emerald-400" :
-                  s === "draft" ? "bg-zinc-500/20 text-zinc-400" :
-                  s === "published" ? "bg-sky-500/20 text-sky-400" :
-                  "bg-orange-500/20 text-orange-400"
-                )}>
-                  {byStatus(s).length}
-                </span>
-              )}
+          <TabsList className="w-fit min-w-max">
+            {(["scheduled", "draft", "published", "backlog"] as PostStatus[]).map((s) => (
+              <TabsTrigger key={s} value={s} className="gap-2">
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+                {byStatus(s).length > 0 && (
+                  <span className={cn(
+                    "flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium",
+                    s === "scheduled" ? "bg-emerald-500/20 text-emerald-400" :
+                    s === "draft" ? "bg-zinc-500/20 text-zinc-400" :
+                    s === "published" ? "bg-sky-500/20 text-sky-400" :
+                    "bg-orange-500/20 text-orange-400"
+                  )}>
+                    {byStatus(s).length}
+                  </span>
+                )}
+              </TabsTrigger>
+            ))}
+            {/* Live Feed tab */}
+            <TabsTrigger value="live" className="gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_theme(colors.emerald.400)]" />
+              Live Feed
             </TabsTrigger>
-          ))}
-        </TabsList>
+          </TabsList>
         </div>
 
         {(["scheduled", "draft", "published", "backlog"] as PostStatus[]).map((s) => (
@@ -548,6 +670,10 @@ export default function InstagramPage() {
             />
           </TabsContent>
         ))}
+
+        <TabsContent value="live" className="mt-0">
+          <LiveFeed />
+        </TabsContent>
       </Tabs>
 
       <PostDialog
