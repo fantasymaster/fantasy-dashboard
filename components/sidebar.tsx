@@ -97,7 +97,7 @@ export function Sidebar() {
 
           return (
             <Tooltip key={item.href}>
-              <TooltipTrigger asChild>
+              <TooltipTrigger>
                 <Link
                   href={item.href}
                   className={cn(
