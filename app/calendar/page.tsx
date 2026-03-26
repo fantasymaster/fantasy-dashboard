@@ -1,137 +1,282 @@
-import { CalendarDays, PlusCircle, Filter, ChevronLeft, ChevronRight } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+"use client";
+
+import { useState, useEffect } from "react";
+import { CalendarDays, ChevronLeft, ChevronRight, ImageIcon, Film, Layers, BookOpen, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { fetchPosts } from "@/lib/posts-service";
+import { type InstagramPost, type PostType, POST_TYPE_ACCENT } from "@/lib/instagram-types";
 
-const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-// Generate a placeholder calendar grid for the current month (March 2026)
-const calendarDays = Array.from({ length: 35 }, (_, i) => {
-  const day = i - 2; // March 2026 starts on Sunday (index 0 = day -2, so day 1 = index 3)
-  return day > 0 && day <= 31 ? day : null;
-});
+const PostTypeIconMap: Record<PostType, React.ElementType> = {
+  photo: ImageIcon, carousel: Layers, reel: Film, story: BookOpen,
+};
 
-const features = [
-  {
-    title: "Drag-and-Drop Scheduling",
-    description: "Intuitively move content between dates with a visual drag-and-drop interface.",
-  },
-  {
-    title: "Multi-Platform View",
-    description: "See all scheduled content across Instagram, Twitter, LinkedIn, and more.",
-  },
-  {
-    title: "Content Status Tracking",
-    description: "Track content through Draft, Review, Approved, and Published stages.",
-  },
-  {
-    title: "Team Collaboration",
-    description: "Assign content to team members and manage approval workflows.",
-  },
+const POST_TYPE_DOT: Record<PostType, string> = {
+  photo: "bg-blue-400",
+  carousel: "bg-purple-400",
+  reel: "bg-pink-400",
+  story: "bg-amber-400",
+};
+
+function getDaysInMonth(year: number, month: number) {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function getFirstDayOfMonth(year: number, month: number) {
+  return new Date(year, month, 1).getDay();
+}
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 export default function CalendarPage() {
+  const today = new Date();
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [posts, setPosts] = useState<InstagramPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchPosts()
+      .then(setPosts)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  function prevMonth() {
+    if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1); }
+    else setCurrentMonth(m => m - 1);
+    setSelectedDay(null);
+  }
+
+  function nextMonth() {
+    if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y => y + 1); }
+    else setCurrentMonth(m => m + 1);
+    setSelectedDay(null);
+  }
+
+  const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+  const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
+
+  // Map posts to days
+  const postsByDay: Record<number, InstagramPost[]> = {};
+  posts.forEach((post) => {
+    const dateStr = post.scheduledDate || post.publishedDate || post.createdAt;
+    if (!dateStr) return;
+    const d = new Date(dateStr);
+    if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
+      const day = d.getDate();
+      if (!postsByDay[day]) postsByDay[day] = [];
+      postsByDay[day].push(post);
+    }
+  });
+
+  const selectedPosts = selectedDay ? (postsByDay[selectedDay] ?? []) : [];
+
+  const calendarCells = [
+    ...Array(firstDay).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+
+  // Pad to full weeks
+  while (calendarCells.length % 7 !== 0) calendarCells.push(null);
+
+  const isToday = (day: number) =>
+    day === today.getDate() &&
+    currentMonth === today.getMonth() &&
+    currentYear === today.getFullYear();
+
   return (
-    <div className="p-8">
+    <div className="flex flex-col gap-6 p-8">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600/20">
-            <CalendarDays className="h-5 w-5 text-emerald-400" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Content Calendar
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Plan and schedule your content pipeline
-            </p>
-          </div>
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15">
+          <CalendarDays className="h-5 w-5 text-emerald-400" />
         </div>
-        <Badge variant="outline" className="text-amber-400 border-amber-400/30 bg-amber-400/10">
-          Coming Soon
-        </Badge>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Content Calendar</h1>
+          <p className="text-sm text-muted-foreground">
+            View your scheduled and published posts by date
+          </p>
+        </div>
       </div>
 
-      {/* Calendar navigation */}
-      <Card className="mb-6 bg-card">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" disabled>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <h2 className="text-base font-semibold text-foreground">March 2026</h2>
-              <Button variant="ghost" size="icon" disabled>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" disabled className="gap-2">
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
-              <Button variant="secondary" size="sm" disabled className="gap-2">
-                <PlusCircle className="h-4 w-4" />
-                Add Content
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {/* Day headers */}
-          <div className="mb-2 grid grid-cols-7 gap-1">
-            {daysOfWeek.map((day) => (
-              <div
-                key={day}
-                className="py-2 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground"
-              >
-                {day}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Calendar */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <h2 className="text-base font-semibold min-w-36 text-center">
+                  {MONTH_NAMES[currentMonth]} {currentYear}
+                </h2>
+                <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
-            ))}
-          </div>
+              {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {/* Day headers */}
+            <div className="mb-1 grid grid-cols-7 gap-1">
+              {DAYS_OF_WEEK.map((d) => (
+                <div key={d} className="py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {d}
+                </div>
+              ))}
+            </div>
 
-          {/* Calendar grid */}
-          <div className="grid grid-cols-7 gap-1">
-            {calendarDays.map((day, idx) => (
-              <div
-                key={idx}
-                className={`min-h-[80px] rounded-lg border p-2 ${
-                  day
-                    ? day === 25
-                      ? "border-primary/40 bg-primary/5"
-                      : "border-border bg-muted/20 hover:bg-muted/40 cursor-pointer"
-                    : "border-transparent bg-transparent"
-                }`}
-              >
-                {day && (
-                  <span
-                    className={`text-xs font-medium ${
-                      day === 25 ? "text-primary" : "text-muted-foreground"
-                    }`}
+            {/* Calendar grid */}
+            <div className="grid grid-cols-7 gap-1">
+              {calendarCells.map((day, idx) => {
+                const dayPosts = day ? (postsByDay[day] ?? []) : [];
+                const selected = day === selectedDay;
+                const todayCell = day ? isToday(day) : false;
+
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => day && setSelectedDay(selected ? null : day)}
+                    className={cn(
+                      "min-h-[72px] rounded-lg border p-1.5 transition-all",
+                      day ? "cursor-pointer" : "border-transparent",
+                      day && !selected && !todayCell && "border-border bg-card hover:bg-accent/50",
+                      todayCell && !selected && "border-primary/40 bg-primary/5",
+                      selected && "border-primary bg-primary/10 ring-1 ring-primary/30",
+                    )}
                   >
-                    {day}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                    {day && (
+                      <>
+                        <span className={cn(
+                          "flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium",
+                          todayCell ? "bg-primary text-primary-foreground font-bold" : "text-muted-foreground",
+                        )}>
+                          {day}
+                        </span>
+                        {dayPosts.length > 0 && (
+                          <div className="mt-1 flex flex-col gap-0.5">
+                            {dayPosts.slice(0, 2).map((post) => (
+                              <div
+                                key={post.id}
+                                className={cn(
+                                  "flex items-center gap-0.5 rounded px-1 py-0.5 text-[9px] font-medium truncate",
+                                  `bg-gradient-to-r ${POST_TYPE_ACCENT[post.postType]} bg-opacity-20 text-white/80`
+                                )}
+                              >
+                                <div className={cn("h-1.5 w-1.5 shrink-0 rounded-full", POST_TYPE_DOT[post.postType])} />
+                                <span className="truncate">{post.caption.slice(0, 12)}…</span>
+                              </div>
+                            ))}
+                            {dayPosts.length > 2 && (
+                              <span className="pl-1 text-[9px] text-muted-foreground">+{dayPosts.length - 2} more</span>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
 
-      {/* Features grid */}
-      <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-        Planned Features
-      </h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {features.map((feature) => (
-          <Card key={feature.title} className="bg-card opacity-60">
+            {/* Legend */}
+            <div className="mt-4 flex flex-wrap gap-3 border-t border-border pt-3">
+              {[
+                { label: "Photo", color: "bg-blue-400" },
+                { label: "Carousel", color: "bg-purple-400" },
+                { label: "Reel", color: "bg-pink-400" },
+                { label: "Story", color: "bg-amber-400" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <div className={cn("h-2 w-2 rounded-full", item.color)} />
+                  {item.label}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Side panel */}
+        <div className="flex flex-col gap-3">
+          <Card className="flex-1">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">{feature.title}</CardTitle>
-              <CardDescription className="text-xs">{feature.description}</CardDescription>
+              <h3 className="text-sm font-semibold">
+                {selectedDay
+                  ? `${MONTH_NAMES[currentMonth]} ${selectedDay}`
+                  : "Select a day"}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {selectedDay
+                  ? selectedPosts.length === 0
+                    ? "No posts on this day"
+                    : `${selectedPosts.length} post${selectedPosts.length > 1 ? "s" : ""}`
+                  : "Click a date to see posts"}
+              </p>
             </CardHeader>
+            <CardContent>
+              {!selectedDay && (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <CalendarDays className="mb-2 h-8 w-8 text-muted-foreground/30" />
+                  <p className="text-xs text-muted-foreground">Click any date on the calendar</p>
+                </div>
+              )}
+              {selectedDay && selectedPosts.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <p className="text-xs text-muted-foreground">No posts scheduled for this day</p>
+                </div>
+              )}
+              {selectedPosts.map((post) => {
+                const Icon = PostTypeIconMap[post.postType];
+                return (
+                  <div key={post.id} className="mb-3 rounded-lg border border-border bg-muted/30 p-3">
+                    <div className="mb-2 flex items-center gap-2">
+                      <div className={cn("flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br", POST_TYPE_ACCENT[post.postType])}>
+                        <Icon className="h-3 w-3 text-white" />
+                      </div>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-foreground/80 line-clamp-3">{post.caption}</p>
+                    {post.hashtags && (
+                      <p className="mt-1.5 text-[10px] text-purple-400/70 line-clamp-1">{post.hashtags}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </CardContent>
           </Card>
-        ))}
+
+          {/* Monthly summary */}
+          <Card>
+            <CardHeader className="pb-2">
+              <h3 className="text-sm font-semibold">Month Summary</h3>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+              {[
+                { label: "Scheduled", count: posts.filter(p => p.status === "scheduled" && (() => { const d = new Date(p.scheduledDate ?? ""); return d.getMonth() === currentMonth && d.getFullYear() === currentYear; })()), color: "text-emerald-400" },
+                { label: "Published", count: posts.filter(p => p.status === "published" && (() => { const d = new Date(p.publishedDate ?? p.createdAt); return d.getMonth() === currentMonth && d.getFullYear() === currentYear; })()), color: "text-sky-400" },
+                { label: "Drafts", count: posts.filter(p => p.status === "draft"), color: "text-zinc-400" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">{item.label}</span>
+                  <span className={cn("font-bold text-base", item.color)}>{item.count.length}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
